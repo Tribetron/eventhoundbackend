@@ -12,7 +12,6 @@ require('./routes/index');
 app.use(cors());
 app.use(bodyParser.json());
 app.use("/", houndRoutes);
-// require("env").config();
 
 const db = mysql.createConnection({
     user:'tatenda',
@@ -21,9 +20,6 @@ const db = mysql.createConnection({
     database:'eventhound',
 })
 
-// db.then(()=>{
-//     console.log("connection created successfully")
-// })
 
 
 // default access endpoint
@@ -46,6 +42,8 @@ houndRoutes.route("/v1/users/create").post((req,res)=>{
         res.send(result);
     })
 })
+
+
  
 app.listen(_port,()=>{
     console.log("app running on port " + _port)
