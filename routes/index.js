@@ -15,9 +15,12 @@ exports.create_venue_step_three = '/auth/thirdStep';
 exports.create_venue_step_four = '/auth/fourthStep';
 exports.create_venue_step_five = '/auth/fifthStep';
 exports.create_venue_step_six = '/auth/sixthStep';
+exports.create_venue_update_step_six = '/auth/updateSixthStep'
 exports.create_venue_step_seven = '/auth/seventhStep';
 exports.create_venue_step_eight = '/auth/eightStep';
 exports.create_venue_step_nine = '/venue/create-step-nine';
+
+exports.create_venue_contract = '/auth/placeContract'
 
 exports.list_venue_menus = '/auth/getMenuList'
 exports.list_venue_contracts = '/auth/getContractList'

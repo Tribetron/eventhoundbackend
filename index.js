@@ -31,8 +31,21 @@ const rooms_storage = multer.diskStorage({
     
 })
 
+const contracts_storage = multer.diskStorage({
+    destination: (req, file, cb)=>{
+        cb(null, 'uploads/contracts')
+    },
+
+    filename: (req, file, cb) =>{
+        console.log(file)
+        cb(null, Date.now()+ path.extname(file.originalname))
+    }
+    
+})
+
 const upload = multer({storage: storage})
 const roomsUpload = multer({storage: rooms_storage})
+const contractsUpload = multer({storage: contracts_storage})
 
 
 const { create_user } = require('./routes/index.js');
@@ -49,10 +62,10 @@ const { list_single_venue } = require('./routes/index.js');
 
 // Venues
 const { book_venue, create_venue, create_venue_step_one, create_venue_step_two, create_venue_step_three, create_venue_step_four,
-    create_venue_step_five, create_venue_step_six, create_venue_step_seven, create_venue_step_eight, create_venue_step_nine } = require('./routes/index.js');
+    create_venue_step_five, create_venue_step_six, create_venue_update_step_six, create_venue_step_seven, create_venue_step_eight, create_venue_step_nine } = require('./routes/index.js');
 
 // Menus
-const {list_venue_menus, list_venue_contracts } = require('./routes/index.js');
+const {list_venue_menus, list_venue_contracts, create_venue_contract } = require('./routes/index.js');
 
 
 // Venue Details
@@ -827,6 +840,24 @@ houndRoutes.route(update_venue_status).put((req,res)=>{
     })
 })
 
+
+// 34. Place Contract
+// Route: /auth/placeContract
+houndRoutes.route(create_venue_contract).post( contractsUpload.single('pdf'), (req,res)=>{
+
+    const { place_id,contractDetails} = req.body
+
+    let contract_file = 'uploads/contracts/'+req.file.filename
+    
+    let qr = "INSERT INTO venue_contracts (venue_contract_text, contract_file, place_id) VALUES ('"+contractDetails+"','"+contract_file+"','"+place_id+"');"
+    
+    db.query(qr, (err,result)=>{
+        if(err){
+        res.json(err);
+        }
+        res.send(result);
+    })
+})
 
 
 
