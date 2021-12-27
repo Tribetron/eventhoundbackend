@@ -1,9 +1,39 @@
 const express = require('express');
 const app = express();
+const path = require("path")
 const _port = 1939;
 const mysql = require('mysql');
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const multer = require("multer")
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb)=>{
+        cb(null, 'Uploads')
+    },
+
+    filename: (req, file, cb) =>{
+        console.log(file)
+        cb(null, Date.now()+ path.extname(file.originalname))
+    }
+    
+})
+
+const rooms_storage = multer.diskStorage({
+    destination: (req, file, cb)=>{
+        cb(null, 'uploads/rooms')
+    },
+
+    filename: (req, file, cb) =>{
+        console.log(file)
+        cb(null, Date.now()+ path.extname(file.originalname))
+    }
+    
+})
+
+const upload = multer({storage: storage})
+const roomsUpload = multer({storage: rooms_storage})
+
 
 const { create_user } = require('./routes/index.js');
 const { login_user } = require('./routes/index.js');
@@ -26,14 +56,15 @@ const {list_venue_menus, list_venue_contracts } = require('./routes/index.js');
 
 
 // Venue Details
-const {list_venue_details, get_featured_places, get_last_minute_deals_places} = require('./routes/index.js');
+const {list_venue_details, get_featured_places, get_last_minute_deals_places, 
+    search_for_venue, update_venue_status} = require('./routes/index.js');
 
 
 
 
 // Rooms
 
-const {get_room_details, get_room_pricing, update_room_pricing, add_favourite_place} = require('./routes/index.js');
+const {get_room_details, get_room_pricing, update_room_pricing, add_favourite_place, get_rooms_by_venue_id} = require('./routes/index.js');
 
 
 
@@ -234,17 +265,25 @@ houndRoutes.route(list_single_venue).get((req,res)=>{
 })
 
 // 13.API to book a venue
+// Route : /auth/bookVenue
 houndRoutes.route(book_venue).get((req,res)=>{
-    const venue_data = req.query;
-    const location = venue_data.location;
-    const type = venue_data.type;
-    const time = venue_data.time;
-    const date = venue_data.date;
-    const count = venue_data.count;
-    const minprice = venue_data.minprice;
-    const maxprice = venue_data.maxprice;
+    // const venue_data = req.query;
+    // const location = venue_data.location;
+    // const type = venue_data.type;
+    // const time = venue_data.time;
+    // const date = venue_data.date;
+    // const count = venue_data.count;
+    // const minprice = venue_data.minprice;
+    // const maxprice = venue_data.maxprice;
+
+    const {
+        user_id, booking_date, place_id, room_id, slot_id, guests, start_time, end_time, feature_list, 
+        base_price, total_discount, total_amount, booking_status, amount_paid, amount_due, due_date
+    } = req.body
+
+    let qr = "INSERT INTO bookings (user_id, booking_date, place_id, room_id, slot_id, guests, start_time, end_time, feature_list, base_price, total_discount, total_amount, booking_status, amount_paid, amount_due, due_date) ('"+user_id+"', '"+booking_date+"', '"+place_id+"', '"+room_id+"', '"+slot_id+"', '"+guests+"', '"+start_time+"', '"+end_time+"', '"+feature_list+"', '"+base_price+"', '"+total_discount+"', '"+total_amount+"', '"+booking_status+"', '"+amount_paid+"', '"+amount_due+"', '"+due_date+"');"
     
-    db.query("INSERT INTO venbook (location, type, time, date, count, minprice, maxprice) VALUES ('"+location+"', '"+type+"', '"+time+"', '"+date+"', '"+count+"', '"+minprice+"', '"+maxprice+"');", (err,result)=>{
+    db.query(qr, (err,result)=>{
         if(err){
         res.json(err);
         }
@@ -323,25 +362,145 @@ houndRoutes.route(create_venue_step_three).post((req,res)=>{
 })
 
 // 17. API create venue step four // TODO - iterate through multiple files and upload
-houndRoutes.route(create_venue_step_four).post((req,res)=>{
-    let files = []
+houndRoutes.route(create_venue_step_four).post(  upload.fields([{name: 'bridalShower', maxCount: 1},{name: 'babyShower', maxCount: 1},{name: 'deluxeBar', maxCount: 1},{name: 'premiumBar', maxCount: 1},{name: 'threeCourse', maxCount: 1},{name: 'fourCourse', maxCount: 1},{name: 'threeCourseLunch', maxCount: 1},{name: 'fourCourseLunch', maxCount: 1},{name: 'lateNightStation', maxCount: 1},{name: 'seafoodAntipasto', maxCount: 1},{name: 'antipasto', maxCount: 1}]), (req,res)=>{
+  
+    const {token, place_id} = req.body;
 
-    if (typeof req.body.files === "string") {
-        files.push(req.body.files);
-    } else {
-        files = req.body.files;
+    if (req.files.bridalShower) {
+        let menu_name = req.files.bridalShower[0].fieldname
+        let menu_file = 'uploads/'+req.files.bridalShower[0].filename
+        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
+        db.query(qr, (err,result)=>{
+                if(err){
+                res.json(err);
+                }
+                console.log(result)
+            })
     }
 
-    const { token, place_id, menu_name } = req.body
+    if (req.files.babyShower) {
+        let menu_name = req.files.babyShower[0].fieldname
+        let menu_file = 'uploads/'+req.files.babyShower[0].filename
+        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
+        db.query(qr, (err,result)=>{
+                if(err){
+                res.json(err);
+                }
+                console.log(result)
+            })
+    }
+
+    if (req.files.deluxeBar) {
+        let menu_name = req.files.deluxeBar[0].fieldname
+        let menu_file = 'uploads/'+req.files.deluxeBar[0].filename
+        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
+        db.query(qr, (err,result)=>{
+                if(err){
+                res.json(err);
+                }
+                console.log(result)
+            })
+    }
+
+    if (req.files.premiumBar) {
+        let menu_name = req.files.premiumBar[0].fieldname
+        let menu_file = 'uploads/'+req.files.premiumBar[0].filename
+        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
+        db.query(qr, (err,result)=>{
+                if(err){
+                res.json(err);
+                }
+                console.log(result)
+            })
+    }
+
+    if (req.files.threeCourse) {
+        let menu_name = req.files.threeCourse[0].fieldname
+        let menu_file = 'uploads/'+req.files.threeCourse[0].filename
+        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
+        db.query(qr, (err,result)=>{
+                if(err){
+                res.json(err);
+                }
+                console.log(result)
+            })
+    }
+
+    if (req.files.fourCourse) {
+        let menu_name = req.files.fourCourse[0].fieldname
+        let menu_file = 'uploads/'+req.files.fourCourse[0].filename
+        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
+        db.query(qr, (err,result)=>{
+                if(err){
+                res.json(err);
+                }
+                console.log(result)
+            })
+    }
+
+    if (req.files.threeCourseLunch) {
+        let menu_name = req.files.threeCourseLunch[0].fieldname
+        let menu_file = 'uploads/'+req.files.threeCourseLunch[0].filename
+        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
+        db.query(qr, (err,result)=>{
+                if(err){
+                res.json(err);
+                }
+                console.log(result)
+            })
+    }
+
+    if (req.files.fourCourseLunch) {
+        let menu_name = req.files.fourCourseLunch[0].fieldname
+        let menu_file = 'uploads/'+req.files.fourCourseLunch[0].filename
+        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
+        db.query(qr, (err,result)=>{
+                if(err){
+                res.json(err);
+                }
+                console.log(result)
+            })
+    }
+
+    if (req.files.lateNightStation) {
+        let menu_name = req.files.lateNightStation[0].fieldname
+        let menu_file = 'uploads/'+req.files.lateNightStation[0].filename
+        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
+        db.query(qr, (err,result)=>{
+                if(err){
+                res.json(err);
+                }
+                console.log(result)
+            })
+    }
+
+    if (req.files.seafoodAntipasto) {
+        let menu_name = req.files.seafoodAntipasto[0].fieldname
+        let menu_file = 'uploads/'+req.files.seafoodAntipasto[0].filename
+        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
+        db.query(qr, (err,result)=>{
+                if(err){
+                res.json(err);
+                }
+                console.log(result)
+            })
+    }
+
+    if (req.files.antipasto) {
+        let menu_name = req.files.antipasto[0].fieldname
+        let menu_file = 'uploads/'+req.files.antipasto[0].filename
+        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
+        db.query(qr, (err,result)=>{
+                if(err){
+                res.json(err);
+                }
+                console.log(result)
+            })
+    }
+
+
+   
     
-    let qr = "INSERT INTO venue_menus (token, place_id, menu_name) VALUES ('"+token+"','"+place_id+"','"+menu_name+"');"
-    
-    db.query(qr, (err,result)=>{
-        if(err){
-        res.json(err);
-        }
-        res.send(result);
-    })
 })
 
 
@@ -377,9 +536,43 @@ houndRoutes.route(create_venue_step_six).post((req,res)=>{
 })
 
 // 20. API create venue step seven
+// Room Images
+// Route: //auth/updateSixthStep
+houndRoutes.route(create_venue_update_step_six).post( roomsUpload.fields([{name:'roomimages',maxCount:30},{name:'roomvideos',maxCount: 1}]), (req,res)=>{
+
+    const { room_id } = req.body
+
+    if (req.files.roomimages) {
+        let image_url = 'uploads/rooms/'+req.files.roomimages[0].filename
+        let qr = "INSERT INTO room_images (room_id, image_url) VALUES ('"+room_id+"','"+image_url+"');"
+        db.query(qr, (err,result)=>{
+                if(err){
+                res.json(err);
+                }
+                console.log(result)
+            })
+    }
+
+    if (req.files.roomvideos) {
+        let video_url = 'uploads/rooms/'+req.files.roomvideos[0].filename
+        let qr = "INSERT INTO room_videos (room_id, video_url) VALUES ('"+room_id+"','"+video_url+"');"
+        db.query(qr, (err,result)=>{
+                if(err){
+                res.json(err);
+                }
+                console.log(result)
+            })
+    }
+
+
+
+})
+
+
+// 20. API create venue step seven
 houndRoutes.route(create_venue_step_seven).post((req,res)=>{
 
-    const { } = req.body
+   
     
     let qr = ""
     
@@ -558,6 +751,89 @@ houndRoutes.route(add_favourite_place).post((req,res)=>{
         res.send(result);
     })
 })
+
+
+// 30. API get rooms by venue id
+// Route : /auth/getRoomByPlaceId
+houndRoutes.route(get_rooms_by_venue_id).get((req,res)=>{
+
+    const place_id = req.query.place_id
+        
+    let qr = "SELECT * FROM rooms where place_id = '"+place_id+"'";
+    
+    db.query(qr, (err,result)=>{
+        if(err){
+        res.json(err);
+        }
+        res.send(result);
+    })
+})
+
+
+// 31. Search for Venues
+// Route : /api/searchWithoutFilter
+houndRoutes.route(search_for_venue).post((req,res)=>{
+
+    const {
+        address, eventDate, maxPrice, minPrice, numberOfPeople, time, lat, lng
+    } = req.body
+        
+    let qr = "SELECT * FROM venue where address LIKE '%" + address + "%'";
+    
+    db.query(qr, (err,result)=>{
+        if(err){
+        res.json(err);
+        }
+        res.send(result);
+    })
+})
+
+
+// 32. Update Venue Status
+// Route : /api/updatePlaceStatus
+houndRoutes.route(update_venue_status).put((req,res)=>{
+
+    const {
+        place_id, placeStatus
+    } = req.body
+        
+    let qr = "UPDATE venue SET status = '"+placeStatus+"' WHERE venue_id = '"+place_id+"'";
+    
+    db.query(qr, (err,result)=>{
+        if(err){
+        res.json(err);
+        }
+        res.send(result);
+    })
+})
+
+
+
+// 33. Book Venue
+// Route : /auth/bookVenue
+houndRoutes.route(update_venue_status).put((req,res)=>{
+
+    const {
+        place_id, placeStatus
+    } = req.body
+        
+    let qr = "UPDATE venue SET status = '"+placeStatus+"' WHERE venue_id = '"+place_id+"'";
+    
+    db.query(qr, (err,result)=>{
+        if(err){
+        res.json(err);
+        }
+        res.send(result);
+    })
+})
+
+
+
+
+
+
+
+
 
 
 
