@@ -6,6 +6,31 @@ const mysql = require('mysql');
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const multer = require("multer")
+const multerS3 = require("multer-s3")
+const aws = require("aws-sdk")
+const dotenv = require("dotenv")
+
+dotenv.config()
+
+aws.config.update({
+    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+    accessKeyId: process.env.ACCESS_KEY_ID,
+    region: 'us-west-2'
+})
+
+const s3 = new aws.S3();
+
+const s3Upload = multer({
+    storage: multerS3({
+        acl: 'public-read',
+        s3,
+        bucket: 'eventhoundmenus',
+        key: function(req, file, cb){
+            req.file = Date.now() + file.originalname,
+            cb(null, Date.now() + file.originalname)
+        }
+    })
+})
 
 const storage = multer.diskStorage({
     destination: (req, file, cb)=>{
@@ -375,142 +400,19 @@ houndRoutes.route(create_venue_step_three).post((req,res)=>{
 })
 
 // 17. API create venue step four // TODO - iterate through multiple files and upload
-houndRoutes.route(create_venue_step_four).post(  upload.fields([{name: 'bridalShower', maxCount: 1},{name: 'babyShower', maxCount: 1},{name: 'deluxeBar', maxCount: 1},{name: 'premiumBar', maxCount: 1},{name: 'threeCourse', maxCount: 1},{name: 'fourCourse', maxCount: 1},{name: 'threeCourseLunch', maxCount: 1},{name: 'fourCourseLunch', maxCount: 1},{name: 'lateNightStation', maxCount: 1},{name: 'seafoodAntipasto', maxCount: 1},{name: 'antipasto', maxCount: 1}]), (req,res)=>{
+houndRoutes.route(create_venue_step_four).post(  s3Upload.fields([{name: 'bridalShower', maxCount: 1},{name: 'babyShower', maxCount: 1},{name: 'deluxeBar', maxCount: 1},{name: 'premiumBar', maxCount: 1},{name: 'threeCourse', maxCount: 1},{name: 'fourCourse', maxCount: 1},{name: 'threeCourseLunch', maxCount: 1},{name: 'fourCourseLunch', maxCount: 1},{name: 'lateNightStation', maxCount: 1},{name: 'seafoodAntipasto', maxCount: 1},{name: 'antipasto', maxCount: 1},{name: 'menu1', maxCount: 1},{name: 'menu2', maxCount: 1},{name: 'menu3', maxCount: 1},{name: 'menu4', maxCount: 1},{name: 'menu5', maxCount: 1},{name: 'menu6', maxCount: 1},{name: 'menu7', maxCount: 1},{name: 'menu8', maxCount: 1},{name: 'menu9', maxCount: 1},{name: 'menu10', maxCount: 1}]), (req,res)=>{
   
-    const {token, place_id} = req.body;
+    const {token, place_id, menuName1, menuName2, menuName3, menuName4, menuName5, menuName6, menuName7, menuName8, menuName9, menuName10} = req.body;
 
-    if (req.files.bridalShower) {
-        let menu_name = req.files.bridalShower[0].fieldname
-        let menu_file = 'uploads/'+req.files.bridalShower[0].filename
-        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
-        db.query(qr, (err,result)=>{
-                if(err){
-                res.json(err);
-                }
-                console.log(result)
-            })
-    }
+    
 
-    if (req.files.babyShower) {
-        let menu_name = req.files.babyShower[0].fieldname
-        let menu_file = 'uploads/'+req.files.babyShower[0].filename
-        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
-        db.query(qr, (err,result)=>{
-                if(err){
-                res.json(err);
-                }
-                console.log(result)
-            })
-    }
-
-    if (req.files.deluxeBar) {
-        let menu_name = req.files.deluxeBar[0].fieldname
-        let menu_file = 'uploads/'+req.files.deluxeBar[0].filename
-        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
-        db.query(qr, (err,result)=>{
-                if(err){
-                res.json(err);
-                }
-                console.log(result)
-            })
-    }
-
-    if (req.files.premiumBar) {
-        let menu_name = req.files.premiumBar[0].fieldname
-        let menu_file = 'uploads/'+req.files.premiumBar[0].filename
-        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
-        db.query(qr, (err,result)=>{
-                if(err){
-                res.json(err);
-                }
-                console.log(result)
-            })
-    }
-
-    if (req.files.threeCourse) {
-        let menu_name = req.files.threeCourse[0].fieldname
-        let menu_file = 'uploads/'+req.files.threeCourse[0].filename
-        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
-        db.query(qr, (err,result)=>{
-                if(err){
-                res.json(err);
-                }
-                console.log(result)
-            })
-    }
-
-    if (req.files.fourCourse) {
-        let menu_name = req.files.fourCourse[0].fieldname
-        let menu_file = 'uploads/'+req.files.fourCourse[0].filename
-        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
-        db.query(qr, (err,result)=>{
-                if(err){
-                res.json(err);
-                }
-                console.log(result)
-            })
-    }
-
-    if (req.files.threeCourseLunch) {
-        let menu_name = req.files.threeCourseLunch[0].fieldname
-        let menu_file = 'uploads/'+req.files.threeCourseLunch[0].filename
-        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
-        db.query(qr, (err,result)=>{
-                if(err){
-                res.json(err);
-                }
-                console.log(result)
-            })
-    }
-
-    if (req.files.fourCourseLunch) {
-        let menu_name = req.files.fourCourseLunch[0].fieldname
-        let menu_file = 'uploads/'+req.files.fourCourseLunch[0].filename
-        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
-        db.query(qr, (err,result)=>{
-                if(err){
-                res.json(err);
-                }
-                console.log(result)
-            })
-    }
-
-    if (req.files.lateNightStation) {
-        let menu_name = req.files.lateNightStation[0].fieldname
-        let menu_file = 'uploads/'+req.files.lateNightStation[0].filename
-        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
-        db.query(qr, (err,result)=>{
-                if(err){
-                res.json(err);
-                }
-                console.log(result)
-            })
-    }
-
-    if (req.files.seafoodAntipasto) {
-        let menu_name = req.files.seafoodAntipasto[0].fieldname
-        let menu_file = 'uploads/'+req.files.seafoodAntipasto[0].filename
-        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
-        db.query(qr, (err,result)=>{
-                if(err){
-                res.json(err);
-                }
-                console.log(result)
-            })
-    }
-
-    if (req.files.antipasto) {
-        let menu_name = req.files.antipasto[0].fieldname
-        let menu_file = 'uploads/'+req.files.antipasto[0].filename
-        let qr = "INSERT INTO venue_menus (token, place_id, menu_name, menu_file) VALUES ('"+token+"','"+place_id+"','"+menu_name+"','"+menu_file+"');"
-        db.query(qr, (err,result)=>{
-                if(err){
-                res.json(err);
-                }
-                console.log(result)
-            })
-    }
-
+    let qr = "INSERT INTO venue_menus (token, place_id, bridal_shower_image, baby_shower_image, delux_bar_image, premium_bar_image, 3_course_dinner_image, 4_course_dinner_image, 3_course_lunch, 4_course_lunch_image, late_night_stations, seafood_antipasto, antipasto, menu1_name, menu1_file, menu2_name, menu2_file,menu3_name, menu3_file,menu4_name, menu4_file,menu5_name, menu5_file,menu6_name, menu6_file,menu7_name, menu7_file,menu8_name, menu8_file,menu9_name, menu9_file,menu10_name, menu10_file) VALUES ('"+token+"','"+place_id+"','"+req.files.bridalShower[0].location+"','"+req.files.babyShower[0].location+"','"+req.files.deluxeBar[0].location+"','"+req.files.premiumBar[0].location+"','"+req.files.threeCourse[0].location+"','"+req.files.fourCourse[0].location+"','"+req.files.threeCourseLunch[0].location+"','"+req.files.fourCourseLunch[0].location+"','"+req.files.lateNightStation[0].location+"','"+req.files.seafoodAntipasto[0].location+"','"+req.files.antipasto[0].location+"','"+menuName1+"','"+req.files.menu1[0].location+"','"+menuName2+"','"+req.files.menu2[0].location+"','"+menuName3+"','"+req.files.menu3[0].location+"','"+menuName4+"','"+req.files.menu4[0].location+"','"+menuName5+"','"+req.files.menu5[0].location+"','"+menuName6+"','"+req.files.menu6[0].location+"','"+menuName7+"','"+req.files.menu7[0].location+"','"+menuName8+"','"+req.files.menu8[0].location+"','"+menuName9+"','"+req.files.menu9[0].location+"','"+menuName10+"','"+req.files.menu10[0].location+"');"
+    db.query(qr, (err,result)=>{
+        if(err){
+        res.json(err);
+        }
+        res.send(result);
+    })
 
    
     
